@@ -6,14 +6,21 @@ body {
 }
 
 pre {
-    background-color: #222;
     font-family: "Meslo Lt M for Powerline", "Consolas", monospace;
     color: #fff;
-    word-wrap: break-word;
 }
 
 .content {
     max-width: 800px;
     margin: auto;
     margin-top: 40px;
+}
+
+#log {
+    word-wrap: break-word;
+    background-color: #222;
+    padding-top: 30px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
 }
