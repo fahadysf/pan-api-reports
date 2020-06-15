@@ -19,7 +19,8 @@ axios.get(root, {
             type: 'report',
             reporttype: 'dynamic',
             async: 'no',
-            reportname: 'top-attacks-acc',
+            cmd: '<type><panorama-trsum><sortby>bytes</sortby><group-by>app</group-by><aggregate-by><member>category-of-app</member></aggregate-by><values><member>bytes</member><member>sessions</member><member>nthreats</member></values></panorama-trsum></type><period>last-hour</period><topn>10</topn><topm>10</topm><caption>panorama-traffic-summary</caption><query>(device-groupeqfy-home-net-fw-dg)</query><runnow>yes</runnow>',
+            reportname: 'custom-dynamic-report',
             key: 'LUFRPT1qd3dpQmpEbjM1WEhBamZ1MlNkYTRLRXJDeGM9dVMxa1Z2Tkt1bnlnQmhPb2Qrb2RKQndxNmVRN3dLOVlRM29LT1hEOHZJVEd6aEhLWDhOWWI5V2VxUmhyUUVIZg=='
         }
     }).then((response) => {

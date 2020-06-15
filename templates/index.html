@@ -18,7 +18,9 @@
 
   <!-- Add your site or application content here -->
   <div class="content">
-    <div id="chart" style="height: 250px;"></div>
+    <div id="chart" style="height: 460px; background: #fff;">
+      <canvas id="doughnut-chart" width="800" height="450"></canvas>
+    </div>
     <div id="log"></div>
   </div>
 
@@ -30,10 +32,67 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery-xml2json@0.0.8/src/xml2json.min.js"></script>
   <script src="https://unpkg.com/axios@0.16.2/dist/axios.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
 <script type='text/javascript'>
-var root = 'https://fw1.p.fy.loc/api/';
+var root = 'https://pan.p.fy.loc/api/';
+var api_response = "";
+var api_response_json = "";
+var result_api_response = "";
+var result_api_response_json = "";
+var app_list = [];
+var data_list = [];
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function get_report_data(job_id) {
+  await sleep(2000);
+  axios.get(root, {
+        params: {
+            type: 'report',
+            action: 'get',
+            'job-id': job_id,
+            key: 'LUFRPT1wakI1dzNRT1dZSHpZL3ZnNjViSDNWcHVobkE9ejdZZmpBdXZiUFBDYWUya1pscW92b2RpaVUzb25QeHM1MzFpRGR1VWFRdGNzeWNFRTJCQnFLSW1nRENsMkpCdA=='
+        }
+    }).then((response) => {
+        console.log(`Status code: ${response.status} <br />`);
+        //console.log(response.data);
+        result_api_response = response.data;
+        result_api_response_json = $.xml2json(response.data);
+        console.log(result_api_response_json);
+
+        for (index = 0; index < result_api_response_json.response.result.report.entry.length; index++) { 
+            app_list[index] = result_api_response_json.response.result.report.entry[index].app;
+        };
+        for (index = 0; index < result_api_response_json.response.result.report.entry.length; index++) { 
+            data_list[index] = result_api_response_json.response.result.report.entry[index].bytes;
+        };
+        new Chart(document.getElementById("doughnut-chart"), {
+            type: 'doughnut',
+            data: {
+              labels: app_list,
+              datasets: [
+                {
+                  label: "Population (millions)",
+                  backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850", "navy", "red", "orange", "blue", "brown"],
+                  data: data_list,
+                }
+              ]
+            },
+            options: {
+              title: {
+                display: true,
+                text: 'Top Applications'
+              }
+            }
+        });
+    })
+    .catch((e) => {
+        console.log('error' + e)
+    })
+};
 
 // Make a GET request
 window.onload = function() {
@@ -42,9 +101,9 @@ window.onload = function() {
     var logger = $('#log');
     console.log = function (message) {
         if (typeof message == 'object') {
-            logger.html('<pre>' + (JSON && JSON.stringify ? JSON.stringify(message, undefined, 2) : message) + '</pre><br />');
+            logger.html('<pre>' + logger.html() + (JSON && JSON.stringify ? JSON.stringify(message, undefined, 2) : message) + '</pre><br />');
         } else {
-            logger.html(message);
+            logger.html(logger.html() + message);
         }
     }
   })();
@@ -52,23 +111,40 @@ window.onload = function() {
         params: {
             type: 'report',
             reporttype: 'dynamic',
-            async: 'no',
-            reportname: 'top-attacks-acc',
-            period: 'last-12-hrs',
-            topn: 10,
-            key: 'LUFRPT1qd3dpQmpEbjM1WEhBamZ1MlNkYTRLRXJDeGM9dVMxa1Z2Tkt1bnlnQmhPb2Qrb2RKQndxNmVRN3dLOVlRM29LT1hEOHZJVEd6aEhLWDhOWWI5V2VxUmhyUUVIZg=='
+            cmd: `<type>
+      <panorama-trsum>
+        <sortby>bytes</sortby>
+        <group-by>app</group-by>
+        <aggregate-by>
+          <member>category-of-app</member>
+        </aggregate-by>
+        <values>
+          <member>bytes</member>
+          <member>sessions</member>
+          <member>nthreats</member>
+        </values>
+      </panorama-trsum>
+    </type>
+    <period>last-hour</period>
+    <topn>10</topn>
+    <topm>10</topm>
+    <caption>panorama-traffic-summary</caption>
+    <query>(device-group eq fy-home-net-fw-dg)</query>
+    <runnow>yes</runnow>`,
+            reportname: 'custom-dynamic-report',
+            key: 'LUFRPT1wakI1dzNRT1dZSHpZL3ZnNjViSDNWcHVobkE9ejdZZmpBdXZiUFBDYWUya1pscW92b2RpaVUzb25QeHM1MzFpRGR1VWFRdGNzeWNFRTJCQnFLSW1nRENsMkpCdA=='
         }
     }).then((response) => {
-        console.log(`Status code: ${response.status}`);
-        console.log(`Status text: ${response.statusText}`);
-        console.log(`Request method: ${response.request.method}`);
-        console.log(`Path: ${response.request.path}`);
-        console.log(`Date: ${response.headers.date}`);
-        console.log($.xml2json(response.data));
+        console.log(`Status code: ${response.status} <br />`);
+        //console.log(response.data);
+        api_response = response.data;
+        api_response_json = $.xml2json(response.data);
+        console.log(api_response_json);
+        get_report_data(api_response_json.response.result.job);
     })
     .catch((e) => {
         console.log('error' + e)
-    })
+    });
 };
 </script>
 </body>
